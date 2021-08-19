@@ -8,67 +8,124 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 
-// the port client will be connecting to
 #define PORT 3490
-// max number of bytes we can get at once
-#define MAXDATASIZE 300
+#define MAXDATASIZE 1024
+#define ENTITY "**CLIENT**"
+
+void handle_system_call(int result, char *system_call_msg, int verbose) {
+    if (result == -1) {
+        printf("%s: error at %s\n", ENTITY, system_call_msg);
+        exit(1);
+    }
+    if (verbose == 1) {
+        printf("%s: success at %s\n", ENTITY, system_call_msg);
+    }
+}
+
+void handle_client_input_parameters(int argc, char *ip_address, int verbose) {
+    if (ip_address == NULL) {
+        printf("%s: missing ip address\n", ENTITY);
+        exit(1);
+    }
+    if (verbose == 1){
+        printf("%s: input parameters are ok!\n", ENTITY);
+    }
+}
+
+void verify_host_name(struct hostent *he, int verbose) {
+    if (he == NULL) {
+        printf("%s: error at GETHOSTBYNAME()\n", ENTITY);
+        exit(1);
+    }
+    if (verbose == 1){
+        printf("%s: success at GETHOSTBYBNAME()\n", ENTITY);
+    }
+}
+
+char *read_string(char *msg) {
+    char *str;
+    char buf[MAXDATASIZE]; 
+    printf("%s", msg);
+    fgets(buf, MAXDATASIZE, stdin);
+    str = (char*) malloc(strlen(buf) + 1);
+    if (str == NULL) {
+       printf("%s: error out of memory\n", ENTITY);
+       exit(1);
+    }
+    strcpy(str, buf);
+    return str;
+}
+
+char *handle_server_msgs(char *buffer) {
+    printf("\tresponse -> %s\n", buffer);
+    return "";
+}
+
+void handle_connection_with_server(int client_socket_fd, int verbose) {
+    char buffer[MAXDATASIZE];
+    int bytes_received;
+
+    char stop_command[] = "exit";
+    char command[MAXDATASIZE];
+    do {
+        printf("Command > ");
+        fflush(stdout);
+        fgets(command, MAXDATASIZE, stdin);
+
+        //SEND()
+        if(send(client_socket_fd, command, strlen(command), 0) == -1) {
+            printf("%s: SEND() error\n", ENTITY);
+        }
+
+        //RECV()
+        if((bytes_received = recv(client_socket_fd, buffer, MAXDATASIZE-1, 0)) == -1){
+            printf("%s: RECV() error\n", ENTITY);
+        }
+        buffer[bytes_received] = '\0';
+        char *response = handle_server_msgs(buffer);
+
+    } while (strcmp(command, stop_command) != 10);
+
+}
 
 int main(int argc, char *argv[]){
-  int sockfd, numbytes;
-  char buf[MAXDATASIZE];
-  struct hostent *he;
+    int verbose = 0;
+    int system_call_result;
 
-  // connectors address information
-  struct sockaddr_in their_addr;
-  // if no command line argument supplied
-  if(argc != 2){
-    fprintf(stderr, "Client-Usage: %s host_servidor\n", argv[0]);
+    //VERIFY CORRECT INPUT PARAMETERS    
+    char *client_input_ip_addr = argv[1];
+    handle_client_input_parameters(argc, client_input_ip_addr, verbose);
 
-    // just exit
-    exit(1);
-  }
+    //HOSTBYNAME
+    struct hostent *he;
+    he = gethostbyname(client_input_ip_addr);
+    verify_host_name(he, verbose);
 
-  // get the host info
-  if((he=gethostbyname(argv[1])) == NULL){
-    perror("gethostbyname()");
-    exit(1);
-  }
-  else
-    printf("Client-The remote host is: %s\n", argv[1]);
+    //SOCKET()
+    int client_socket_fd;
+    int domain = PF_INET;
+    int type = SOCK_STREAM;
+    int protocol = 0;
+    client_socket_fd = socket(domain, type, protocol);
+    handle_system_call(client_socket_fd, "SOCKET()", verbose);
 
-  if((sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1){
-    perror("socket()");
-    exit(1);
-  }
-  else 
-    printf("Client-The socket() sockfd is OK...\n");
+    //CONNECT()
+    struct sockaddr_in server_ip_addr;
+    server_ip_addr.sin_family = AF_INET;
+    server_ip_addr.sin_port = htons(PORT);
+    server_ip_addr.sin_addr = *((struct in_addr *)he->h_addr);
+    memset(&(server_ip_addr.sin_zero), '\0', 8);
+    system_call_result = connect(
+        client_socket_fd, (struct sockaddr*)&server_ip_addr,
+        sizeof(struct sockaddr)
+    );
+    handle_system_call(system_call_result, "CONNECT()", verbose);
 
-  // host byte order
-  their_addr.sin_family = AF_INET;
-  // short, network byte order
-  printf("Server-Using %s and port %d...\n", argv[1], PORT);
-  their_addr.sin_port = htons(PORT);
-  their_addr.sin_addr = *((struct in_addr *)he->h_addr);
+    //connect with server
+    handle_connection_with_server(client_socket_fd, verbose);
 
-  // zero the rest of the struct
-  memset(&(their_addr.sin_zero), '\0', 8);
-  if(connect(sockfd, (struct sockaddr *)&their_addr, sizeof(struct sockaddr)) == -1){
-    perror("connect()");
-    exit(1);
-  }
-  else
-    printf("Client-The connect() is OK...\n");
+    //CLOSE()
+    close(client_socket_fd);
 
-  if((numbytes = recv(sockfd, buf, MAXDATASIZE-1, 0)) == -1){
-    perror("recv()");
-    exit(1);
-  }
-  else
-    printf("Client-The recv() is OK...\n");
-
-  buf[numbytes] = '\0';
-  printf("Client-Received: %s", buf);
-  printf("Client-Closing sockfd\n");
-  close(sockfd);
-  return 0;
+    return 0;
 }
