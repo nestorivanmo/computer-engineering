@@ -1,189 +1,110 @@
+/*
+	Alumno: Néstor I. Martínez Ostoa
+	No. Cuenta: 315618648
+	Script: Práctica 2 - 7 cubos en pantalla con vista en perspectiva
+	Fecha: 23 de sept del 2021
+
+*/
+
 #include<iostream>
+using namespace std;
 
-//#define GLEW_STATIC
-
+// GLM, GLFW, GLEW headers
 #include <GL/glew.h>
-
 #include <GLFW/glfw3.h>
-
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-
-
+using namespace glm;
 
 // Shaders
 #include "Shader.h"
 
 const GLint WIDTH = 800, HEIGHT = 600;
 
-
 int main() {
 	glfwInit();
-	//Verificación de compatibilidad 
-	// Set all the required options for GLFW
-	/*glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);*/
-
 	glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
-
-	GLFWwindow *window = glfwCreateWindow(WIDTH, HEIGHT, "Practica 3", nullptr, nullptr);
-
+	GLFWwindow *window = glfwCreateWindow(WIDTH, HEIGHT, "Practica 2 - Néstor I. Martínez Ostoa", nullptr, nullptr);
 	int screenWidth, screenHeight;
-
 	glfwGetFramebufferSize(window, &screenWidth, &screenHeight);
 
-	//Verificación de errores de creacion  ventana
-	if (nullptr == window)
-	{
+	if (nullptr == window) {
 		std::cout << "Failed to create GLFW window" << std::endl;
 		glfwTerminate();
-
 		return EXIT_FAILURE;
 	}
 
 	glfwMakeContextCurrent(window);
 	glewExperimental = GL_TRUE;
 
-	//Verificación de errores de inicialización de glew
-
+	
 	if (GLEW_OK != glewInit()) {
 		std::cout << "Failed to initialise GLEW" << std::endl;
 		return EXIT_FAILURE;
 	}
 
-
-	// Define las dimensiones del viewport
 	glViewport(0, 0, screenWidth, screenHeight);
-
-
-	// Setup OpenGL options
 	glEnable(GL_DEPTH_TEST);
-
-	// enable alpha support
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-
-	// Build and compile our shader program
 	Shader ourShader("Shader/core.vs", "Shader/core.frag");
-
-
-	// Set up vertex data (and buffer(s)) and attribute pointers
-	// use with Orthographic Projection
-
-	GLfloat vertices[] = {
-       -0.5f*500, -0.5f, 0.5f, 1.0f, 0.0f,0.0f,//Front
-		0.5f * 500, -0.5f * 500, 0.5f * 500,  1.0f, 0.0f,0.0f,
-		0.5f * 500,  0.5f * 500, 0.5f * 500,  1.0f, 0.0f,0.0f,
-		0.5f * 500,  0.5f * 500, 0.5f * 500,  1.0f, 0.0f,0.0f,
-		-0.5f * 500,  0.5f * 500, 0.5f * 500, 1.0f, 0.0f,0.0f,
-		-0.5f * 500, -0.5f * 500, 0.5f * 500, 1.0f, 0.0f,0.0f,
-		
-	    -0.5f * 500, -0.5f * 500,-0.5f * 500, 0.0f, 1.0f,0.0f,//Back
-		 0.5f * 500, -0.5f * 500,-0.5f * 500, 0.0f, 1.0f,0.0f,
-		 0.5f * 500,  0.5f * 500,-0.5f * 500, 0.0f, 1.0f,0.0f,
-		 0.5f * 500,  0.5f * 500,-0.5f * 500, 0.0f, 1.0f,0.0f,
-	    -0.5f * 500,  0.5f * 500,-0.5f * 500, 0.0f, 1.0f,0.0f,
-	    -0.5f * 500, -0.5f * 500,-0.5f * 500, 0.0f, 1.0f,0.0f,
-		
-		 0.5f * 500, -0.5f * 500,  0.5f * 500,  0.0f, 0.0f,1.0f,
-		 0.5f * 500, -0.5f * 500, -0.5f * 500,  0.0f, 0.0f,1.0f,
-		 0.5f * 500,  0.5f * 500, -0.5f * 500,  0.0f, 0.0f,1.0f,
-		 0.5f * 500,  0.5f * 500, -0.5f * 500,  0.0f, 0.0f,1.0f,
-		 0.5f * 500,  0.5f * 500,  0.5f * 500,  0.0f, 0.0f,1.0f,
-		 0.5f * 500,  -0.5f * 500, 0.5f * 500, 0.0f, 0.0f,1.0f,
-      
-		-0.5f * 500,  0.5f * 500,  0.5f * 500,  1.0f, 1.0f,0.0f,
-		-0.5f * 500,  0.5f * 500, -0.5f * 500,  1.0f, 1.0f,0.0f,
-		-0.5f * 500, -0.5f * 500, -0.5f * 500,  1.0f, 1.0f,0.0f,
-		-0.5f * 500, -0.5f * 500, -0.5f * 500,  1.0f, 1.0f,0.0f,
-		-0.5f * 500, -0.5f * 500,  0.5f * 500,  1.0f, 1.0f,0.0f,
-		-0.5f * 500,  0.5f * 500,  0.5f * 500,  1.0f, 1.0f,0.0f,
-		
-		-0.5f * 500, -0.5f * 500, -0.5f * 500, 0.0f, 1.0f,1.0f,
-		0.5f * 500, -0.5f * 500, -0.5f * 500,  0.0f, 1.0f,1.0f,
-		0.5f * 500, -0.5f * 500,  0.5f * 500,  0.0f, 1.0f,1.0f,
-		0.5f * 500, -0.5f * 500,  0.5f * 500,  0.0f, 1.0f,1.0f,
-		-0.5f * 500, -0.5f * 500,  0.5f * 500, 0.0f, 1.0f,1.0f,
-		-0.5f * 500, -0.5f * 500, -0.5f * 500, 0.0f, 1.0f,1.0f,
-		
-		-0.5f * 500,  0.5f * 500, -0.5f * 500, 1.0f, 0.2f,0.5f,
-		0.5f * 500,  0.5f * 500, -0.5f * 500,  1.0f, 0.2f,0.5f,
-		0.5f * 500,  0.5f * 500,  0.5f * 500,  1.0f, 0.2f,0.5f,
-		0.5f * 500,  0.5f * 500,  0.5f * 500,  1.0f, 0.2f,0.5f,
-		-0.5f * 500,  0.5f * 500,  0.5f * 500, 1.0f, 0.2f,0.5f,
-		-0.5f * 500,  0.5f * 500, -0.5f * 500, 1.0f, 0.2f,0.5f,
-	};
 	
-
-	// use with Perspective Projection
-	//float vertices[] = {
-	//	-0.5f, -0.5f, 0.5f, 1.0f, 0.0f,0.0f,//Front
-	//	0.5f, -0.5f, 0.5f,  1.0f, 0.0f,0.0f,
-	//	0.5f,  0.5f, 0.5f,  1.0f, 0.0f,0.0f,
-	//	0.5f,  0.5f, 0.5f,  1.0f, 0.0f,0.0f,
-	//	-0.5f,  0.5f, 0.5f, 1.0f, 0.0f,0.0f,
-	//	-0.5f, -0.5f, 0.5f, 1.0f, 0.0f,0.0f,
-	//	
-	//    -0.5f, -0.5f,-0.5f, 0.0f, 1.0f,0.0f,//Back
-	//	 0.5f, -0.5f,-0.5f, 0.0f, 1.0f,0.0f,
-	//	 0.5f,  0.5f,-0.5f, 0.0f, 1.0f,0.0f,
-	//	 0.5f,  0.5f,-0.5f, 0.0f, 1.0f,0.0f,
-	//    -0.5f,  0.5f,-0.5f, 0.0f, 1.0f,0.0f,
-	//    -0.5f, -0.5f,-0.5f, 0.0f, 1.0f,0.0f,
-	//	
-	//	 0.5f, -0.5f,  0.5f,  0.0f, 0.0f,1.0f,
-	//	 0.5f, -0.5f, -0.5f,  0.0f, 0.0f,1.0f,
-	//	 0.5f,  0.5f, -0.5f,  0.0f, 0.0f,1.0f,
-	//	 0.5f,  0.5f, -0.5f,  0.0f, 0.0f,1.0f,
-	//	 0.5f,  0.5f,  0.5f,  0.0f, 0.0f,1.0f,
-	//	 0.5f,  -0.5f, 0.5f, 0.0f, 0.0f,1.0f,
- //     
-	//	-0.5f,  0.5f,  0.5f,  1.0f, 1.0f,0.0f,
-	//	-0.5f,  0.5f, -0.5f,  1.0f, 1.0f,0.0f,
-	//	-0.5f, -0.5f, -0.5f,  1.0f, 1.0f,0.0f,
-	//	-0.5f, -0.5f, -0.5f,  1.0f, 1.0f,0.0f,
-	//	-0.5f, -0.5f,  0.5f,  1.0f, 1.0f,0.0f,
-	//	-0.5f,  0.5f,  0.5f,  1.0f, 1.0f,0.0f,
-	//	
-	//	-0.5f, -0.5f, -0.5f, 0.0f, 1.0f,1.0f,
-	//	0.5f, -0.5f, -0.5f,  0.0f, 1.0f,1.0f,
-	//	0.5f, -0.5f,  0.5f,  0.0f, 1.0f,1.0f,
-	//	0.5f, -0.5f,  0.5f,  0.0f, 1.0f,1.0f,
-	//	-0.5f, -0.5f,  0.5f, 0.0f, 1.0f,1.0f,
-	//	-0.5f, -0.5f, -0.5f, 0.0f, 1.0f,1.0f,
-	//	
-	//	-0.5f,  0.5f, -0.5f, 1.0f, 0.2f,0.5f,
-	//	0.5f,  0.5f, -0.5f,  1.0f, 0.2f,0.5f,
-	//	0.5f,  0.5f,  0.5f,  1.0f, 0.2f,0.5f,
-	//	0.5f,  0.5f,  0.5f,  1.0f, 0.2f,0.5f,
-	//	-0.5f,  0.5f,  0.5f, 1.0f, 0.2f,0.5f,
-	//	-0.5f,  0.5f, -0.5f, 1.0f, 0.2f,0.5f,
-	//};
-
-
+	// Perspective Projection
+	float vertices[] = {
+		-0.5f, -0.5f, 0.5f, 1.0f, 0.0f,0.0f,// Front - Red
+		0.5f, -0.5f, 0.5f,  1.0f, 0.0f,0.0f,
+		0.5f,  0.5f, 0.5f,  1.0f, 0.0f,0.0f,
+		0.5f,  0.5f, 0.5f,  1.0f, 0.0f,0.0f,
+		-0.5f,  0.5f, 0.5f, 1.0f, 0.0f,0.0f,
+		-0.5f, -0.5f, 0.5f, 1.0f, 0.0f,0.0f,
+		
+	    -0.5f, -0.5f,-0.5f, 0.0f, 1.0f,0.0f,// Back - Green
+		 0.5f, -0.5f,-0.5f, 0.0f, 1.0f,0.0f,
+		 0.5f,  0.5f,-0.5f, 0.0f, 1.0f,0.0f,
+		 0.5f,  0.5f,-0.5f, 0.0f, 1.0f,0.0f,
+	    -0.5f,  0.5f,-0.5f, 0.0f, 1.0f,0.0f,
+	    -0.5f, -0.5f,-0.5f, 0.0f, 1.0f,0.0f,
+		
+		 0.5f, -0.5f,  0.5f,  0.0f, 0.0f,1.0f, //Right - Blue
+		 0.5f, -0.5f, -0.5f,  0.0f, 0.0f,1.0f,
+		 0.5f,  0.5f, -0.5f,  0.0f, 0.0f,1.0f,
+		 0.5f,  0.5f, -0.5f,  0.0f, 0.0f,1.0f,
+		 0.5f,  0.5f,  0.5f,  0.0f, 0.0f,1.0f,
+		 0.5f,  -0.5f, 0.5f, 0.0f, 0.0f,1.0f,
+      
+		-0.5f,  0.5f,  0.5f,  1.0f, 1.0f,0.0f, // Left - Yellow
+		-0.5f,  0.5f, -0.5f,  1.0f, 1.0f,0.0f,
+		-0.5f, -0.5f, -0.5f,  1.0f, 1.0f,0.0f,
+		-0.5f, -0.5f, -0.5f,  1.0f, 1.0f,0.0f,
+		-0.5f, -0.5f,  0.5f,  1.0f, 1.0f,0.0f,
+		-0.5f,  0.5f,  0.5f,  1.0f, 1.0f,0.0f,
+		
+		-0.5f, -0.5f, -0.5f, 0.0f, 1.0f,1.0f, // Bottom - Light Blue
+		0.5f, -0.5f, -0.5f,  0.0f, 1.0f,1.0f,
+		0.5f, -0.5f,  0.5f,  0.0f, 1.0f,1.0f,
+		0.5f, -0.5f,  0.5f,  0.0f, 1.0f,1.0f,
+		-0.5f, -0.5f,  0.5f, 0.0f, 1.0f,1.0f,
+		-0.5f, -0.5f, -0.5f, 0.0f, 1.0f,1.0f,
+		
+		-0.5f,  0.5f, -0.5f, 1.0f, 0.2f,0.5f, // Top - Light Pink
+		0.5f,  0.5f, -0.5f,  1.0f, 0.2f,0.5f,
+		0.5f,  0.5f,  0.5f,  1.0f, 0.2f,0.5f,
+		0.5f,  0.5f,  0.5f,  1.0f, 0.2f,0.5f,
+		-0.5f,  0.5f,  0.5f, 1.0f, 0.2f,0.5f,
+		-0.5f,  0.5f, -0.5f, 1.0f, 0.2f,0.5f,
+	};
 
 
 	GLuint VBO, VAO;
 	glGenVertexArrays(1, &VAO);
 	glGenBuffers(1, &VBO);
-	//glGenBuffers(1, &EBO);
-
-	// Enlazar  Vertex Array Object
 	glBindVertexArray(VAO);
-
-	//2.- Copiamos nuestros arreglo de vertices en un buffer de vertices para que OpenGL lo use
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-	// 3.Copiamos nuestro arreglo de indices en  un elemento del buffer para que OpenGL lo use
-	/*glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);*/
 
-	// 4. Despues colocamos las caracteristicas de los vertices
-
+	
 	//Posicion
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid *)0);
 	glEnableVertexAttribArray(0);
@@ -191,37 +112,35 @@ int main() {
 	//Color
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid *)(3 * sizeof(GLfloat)));
 	glEnableVertexAttribArray(1);
-
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-
-	glBindVertexArray(0); // Unbind VAO (it's always a good thing to unbind any buffer/array to prevent strange bugs)
-
+	glBindVertexArray(0);
 	
+
+	// Matriz de proyección
 	glm::mat4 projection=glm::mat4(1);
 
-	//projection = glm::perspective(45.0f, (GLfloat)screenWidth / (GLfloat)screenHeight, 0.1f, 100.0f);//FOV, Radio de aspecto,znear,zfar
-	projection = glm::ortho(0.0f, (GLfloat)screenWidth, 0.0f, (GLfloat)screenHeight, 0.1f, 1000.0f);//Izq,Der,Fondo,Alto,Cercania,Lejania
-	while (!glfwWindowShouldClose(window))
-	{
-		// Check if any events have been activiated (key pressed, mouse moved etc.) and call corresponding response functions
+
+	// (FOV, Radio de aspecto, znear, zfar)
+	projection = glm::perspective(45.0f, (GLfloat)screenWidth / (GLfloat)screenHeight, 0.1f, 100.0f);
+
+
+	// Dibujo en pantalla
+	while (!glfwWindowShouldClose(window)) {
 		glfwPollEvents();
 
 		// Render
 		// Clear the colorbuffer
 		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT| GL_DEPTH_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-
-		// Draw our first triangle
 		ourShader.Use();
-		glm::mat4 model=glm::mat4(1);
 		glm::mat4 view=glm::mat4(1);
 	
-	 //  view = glm::translate(view, glm::vec3(0.0f,0.0f,0.0f));
-		//model = glm::rotate( model, 0.5f, glm::vec3( 1.0f, 0.0f, 0.0f ) ); // use to compare orthographic and perspective projection
-		//model = glm::scale(model, glm::vec3(500.0f, 500.0f, 500.0f));
-		//view = glm::translate( view, glm::vec3( screenWidth / 2, screenHeight / 2,-700.0f ) ); // use with orthographic projection
+		view = glm::translate(view, glm::vec3(0.0f,0.0f,-8.0f));
+		//model = glm::rotate( model, glm::radians(25.0f), glm::vec3( 1.0f, 0.0f, 0.0f ) ); // use to compare orthographic and perspective projection
+		//model = glm::scale(model, glm::vec3(10.0f, 10.0f, 10.0f));
+		//view = glm::translate( view, glm::vec3( screenWidth / 2, screenHeight / 2, 0 ) ); // use with orthographic projection
 		
 		GLint modelLoc = glGetUniformLocation(ourShader.Program, "model");
 		GLint viewLoc = glGetUniformLocation(ourShader.Program, "view");
@@ -229,32 +148,86 @@ int main() {
 		
 		glUniformMatrix4fv(projecLoc, 1, GL_FALSE, glm::value_ptr(projection));
 		glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
-		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-		
 
 		glBindVertexArray(VAO);
+
+		// ------------------------------------------------------
+		// Dibujo de los cubos:
+		// -------------------
+		// 
+		// 1. Definición de la matriz model (representará a un cubo) - glm::mat4
+		// 2. Definición de la traslación y rotación del modelo - glm::translate y glm::rotate
+		// 3. Mandar información al shader - glUniformMatriz4vf()
+		// 4. Dibujar matriz model - glDrawArrays()
+		// ------------------------------------------------------
+		
+		// Cubo central
+		mat4 model = mat4(1);
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 		glDrawArrays(GL_TRIANGLES, 0, 36);
+
+
+		// Cubo a la derecha del central
+		model = mat4(1);
+		model = translate(model, vec3(2, 0, 0));
+		model = rotate(model, radians(-11.0f - 90.0f), vec3(0, 1, 0));
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, value_ptr(model));
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+
+
+		// Cubo a la izquierda del central
+		model = mat4(1);
+		model = translate(model, vec3(-2, 0, 0));
+		model = rotate(model, radians(11.0f + 90.0f), vec3(0, 1, 0));
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, value_ptr(model));
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+
+
+		// Cubo en diagonal derecha por arriba del central
+		model = mat4(1);
+		model = translate(model, vec3(1, 3, 0));
+		model = rotate(model, radians(-4.0f), vec3(0, 1, 0));
+		model = rotate(model, radians(-90.0f + 17.0f), vec3(1, 0, 0));
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, value_ptr(model));
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+
+
+		// Cubo en diagonal izquierda por arriba del central
+		model = mat4(1);
+		model = translate(model, vec3(-1, 3, 0));
+		model = rotate(model, radians(4.0f), vec3(0, 1, 0));
+		model = rotate(model, radians(90.0f + 17.0f), vec3(1, 0, 0));
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, value_ptr(model));
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+
+
+		// Cubo en diagonal derecha debajo del central
+		model = mat4(1);
+		model = translate(model, vec3(1, -3, 0));
+		model = rotate(model, radians(-180.0f - 4.0f), vec3(0, 1, 0));
+		model = rotate(model, radians(18.0f), vec3(1, 0, 0));
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, value_ptr(model));
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+
+
+		// Cubo en diagonal izquierda debajo del central
+		model = mat4(1);
+		model = translate(model, vec3(-1, -3, 0));
+		model = rotate(model, radians(-22.0f), vec3(1, 0, 0)); 
+		model = rotate(model, radians(9.0f), vec3(0, 1, 0)); 
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, value_ptr(model));
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+
+
+		// Finalización
 		glBindVertexArray(0);
-
-
-
-		
-		
-		
-
-		// Swap the screen buffers
 		glfwSwapBuffers(window);
-	
 	}
+
 	glDeleteVertexArrays(1, &VAO);
 	glDeleteBuffers(1, &VBO);
-
-
 	glfwTerminate();
 	return EXIT_SUCCESS;
-
-  
-
 }
 
 
