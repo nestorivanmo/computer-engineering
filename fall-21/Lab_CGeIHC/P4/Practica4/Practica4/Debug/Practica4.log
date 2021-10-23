@@ -1,3 +1,0 @@
-﻿  Main_P4.cpp
-LINK : warning LNK4098: defaultlib 'MSVCRT' conflicts with use of other libs; use /NODEFAULTLIB:library
-  Practica4.vcxproj -> C:\Users\Nestor\Desktop\computer-engineering\fall-21\Lab_CGeIHC\P4\Practica4\Debug\Practica4.exe
