@@ -54,8 +54,13 @@ def animate(grid):
     img = ax.imshow(grid, interpolation='nearest')
     ani = FuncAnimation(
         fig, play, fargs=(img, grid,),
-        frames = 24, interval=100
+        frames = 100, interval=20, blit=True
     )
+
+    w, h = grid.shape
+    file_name = f'gol_{w}_{h}.gif'
+    ani.save(f'./{file_name}', writer='imagemagick', fps=60)
+
     plt.show()
 
 def main():
