@@ -1,3 +1,11 @@
+"""
+Juego de la Vida 
+
+- Martínez Ostoa Néstor Iván
+- Sistemas Distribuidos
+- UNAM
+"""
+
 import argparse
 from ast import arg
 from urllib.parse import ParseResult
